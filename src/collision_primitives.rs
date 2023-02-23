@@ -5,14 +5,18 @@ pub struct CollisionData {
     pub penetration_depth: f32,
 }
 
-pub trait CollisionPrimitive<T: CollisionPrimitive<T>> {
+pub enum Primitives {
+    Circle(CircleCollider),
+    AABB(AABB)
+}
 
+pub trait CollisionPrimitive {
     fn collide(
         &self,
         transform_self: &Transform,
-        other: &T,
+        other: CircleCollider,
         transform_other: &Transform,
-    ) -> Option<CollisionData>;
+    )  -> Option<CollisionData>;
 }
 
 pub struct AABB {
@@ -35,7 +39,7 @@ impl AABB {
         )
     }
 
-    pub fn is_colliding_with(&self, self_transform: &Transform, other: &AABB, other_transform: &Transform) -> Option<CollisionData> {
+    pub fn is_colliding_with_AABB(&self, self_transform: &Transform, other: &AABB, other_transform: &Transform) -> Option<CollisionData> {
         let (min_1, max_1) = self.get_extents_as_global_vectors(self_transform);
         let (min_2, max_2) = other.get_extents_as_global_vectors(other_transform);
         if max_1.x < min_2.x || min_1.x > max_2.x {
@@ -44,53 +48,54 @@ impl AABB {
         if max_1.x < min_2.x || min_1.x > max_2.x {
             return None;
         }
-        Some(CollisionData {
-            unit_normal: default(),
-            penetration_depth: 0.,
-        })
-    }
-}
-impl CollisionPrimitive<AABB> for AABB {
-    
-    fn collide(
-            &self,
-            transform_self: &Transform,
-            other: &AABB,
-            transform_other: &Transform,
-        ) -> Option<CollisionData> {
-        let normal = (transform_self.translation - transform_other.translation).truncate();
-        
-        let extent_self = (self.max - self.min) / 2.;
-        let extent_other = (other.max - other.min) / 2.;
 
-        let overlap = extent_self + extent_other - normal;
 
-        if overlap.x > 0. || overlap.y > 0. {
-            if overlap.x > overlap.y {
-                let unit_normal = 
-                if normal.x  < 0. {
-                    Vec2::new(-1.,0.)
+        // Collision confirmed, find impulse normal and pen depth
+
+        // Steps adapted from https://gamedevelopment.tutsplus.com/tutorials/how-to-create-a-custom-2d-physics-engine-the-basics-and-impulse-resolution--gamedev-6331
+
+        // Vec from self to other
+        let n = (self_transform.translation - other_transform.translation).truncate();
+
+        let self_extent = (max_1.x - min_1.x) / 2.;
+        let other_extent = (max_2.x - min_2.x) / 2.;
+        let overlap_x = self_extent + other_extent - n.x.abs();
+
+        if overlap_x > 0. {
+            let self_extent = (max_1.y - min_1.y) / 2.;
+            let other_extent = (max_2.y - min_2.y) / 2.;
+
+            let overlap_y = self_extent + other_extent - n.y.abs();
+
+            if overlap_y > 0. {
+                println!("Overlap x: {} overlap y: {}", overlap_x, overlap_y);
+                let normal;
+                let penetration;
+                if overlap_x < overlap_y {
+                    if n.x < 0. {
+                        normal = Vec2::new(-1., 0.);
+                    } else {
+                        normal = Vec2::new(1., 0.);
+                    }
+                    penetration = overlap_x;
                 }
                 else {
-                    Vec2::new(1.,0.)
-                };
-                return Some(CollisionData{unit_normal, penetration_depth: overlap.x})
-            }
-            else{
-                let unit_normal = 
-                if normal.x  < 0. {
-                    Vec2::new(0.,-1.)
+                    if n.y < 0. {
+                        normal = Vec2::new(0., -1.);
+                    } else {
+                        normal = Vec2::new(0., 1.);
+                    }
+                    penetration = overlap_y;
                 }
-                else {
-                    Vec2::new(0.,1.)
-                };
-                return Some(CollisionData{unit_normal, penetration_depth: overlap.x})
+                return Some(CollisionData {
+                    unit_normal: normal,
+                    penetration_depth: penetration,
+                })
             }
         }
-        else{
-            None
-        }
-        
+        None
+
+
     }
 }
 
@@ -103,7 +108,7 @@ impl CircleCollider {
         Self { radius }
     }
 
-    pub fn is_colliding_with(
+    pub fn is_colliding_with_circle(
         &self,
         self_transform: &Transform,
         other: &CircleCollider,
@@ -124,42 +129,13 @@ impl CircleCollider {
             None
         }
     }
-}
 
-impl CollisionPrimitive<CircleCollider> for CircleCollider {
-    
-    fn collide(
-            &self,
-            transform_self: &Transform,
-            c: &CircleCollider,
-            transform_c: &Transform,
-        ) -> Option<CollisionData> {
-            
-        let radius_squared = (self.radius + c.radius).powi(2);
-        let normal = (transform_self.translation - transform_c.translation).truncate();
-        if radius_squared > normal.length_squared() {
-            //Collision!
-            let distance = normal.length();
-            let penetration_depth = radius_squared.sqrt() - distance;
-            let unit_normal = normal / distance;
-            Some(CollisionData {
-                unit_normal,
-                penetration_depth,
-            })
-        } else {
-            None
-        }
-    }
-}
-
-impl CollisionPrimitive<AABB> for CircleCollider {
-    
-    fn collide(
-            &self,
-            transform_self: &Transform,
-            c: &AABB,
-            transform_c: &Transform,
-        ) -> Option<CollisionData> {
+    pub fn is_colliding_with_AABB(
+        &self,
+        self_transform: &Transform,
+        other: &AABB,
+        other_transform: &Transform,
+    ) -> Option<CollisionData> {
         None
     }
 }

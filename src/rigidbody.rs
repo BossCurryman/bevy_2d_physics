@@ -1,10 +1,12 @@
+use std::primitive;
+
 use bevy::prelude::{Vec2, *};
 
-use crate::collision_primitives::{CircleCollider, CollisionPrimitive};
+use crate::collision_primitives::{CircleCollider, CollisionPrimitive, Primitives};
 
 #[derive(Component)]
-pub struct Rigidbody<T: CollisionPrimitive<T>> {
-    pub shape: T,
+pub struct Rigidbody {
+    pub shape: Primitives,
     pub linear_velocity: Vec2,
     pub force: Vec2,
     pub angular_velocity: f32,
@@ -14,43 +16,43 @@ pub struct Rigidbody<T: CollisionPrimitive<T>> {
     pub moment: f32,
 }
 
-impl<T: CollisionPrimitive<T>> Rigidbody<T> {
-    // pub fn new(mass: f32, radius: f32) -> Self {
-    //     let I = 0.5 * mass * radius.powf(2.);
+impl Rigidbody {
+    pub fn new_shape(mass: f32, radius: f32, primitive: Primitives) -> Self {
+        let I = 0.5 * mass * radius.powf(2.);
+        Self {
+            shape: primitive,
+            linear_velocity: Vec2::new(0.,500.),
+            force: Vec2::new(0.,0.),
+            angular_velocity: 0.,
+            torque: 0.,
+            restitution: Restitution::new(1.),
+            mass: mass,
+            moment: I
+        }
+    }
+
+    // pub fn new(shape: dyn CollisionPrimitive, mass: f32) {
     //     Self {
-    //         shape: CircleCollider::new(radius),
+    //         shape,
     //         linear_velocity: Vec2::new(0.,500.),
     //         force: Vec2::new(0.,0.),
     //         angular_velocity: 0.,
     //         torque: 0.,
     //         restitution: Restitution::new(0.1),
-    //         mass: mass,
-    //         moment: I
+    //         mass,
+    //         moment: 0.
     //     }
     // }
 
-    pub fn new(shape: T, mass: f32) {
-        Self {
-            shape,
-            linear_velocity: Vec2::new(0.,500.),
-            force: Vec2::new(0.,0.),
-            angular_velocity: 0.,
-            torque: 0.,
-            restitution: Restitution::new(0.1),
-            mass,
-            moment: 0.
-        }
-    }
-
-    pub fn new_with_velocity(mass: f32, radius: f32, velocity: Vec2) -> Self {
+    pub fn new_shape_with_velocity(mass: f32, radius: f32, primitive: Primitives, velocity: Vec2) -> Self {
         let I = 0.5 * mass * radius.powf(2.);
         Self {
-            shape: CircleCollider::new(radius),
+            shape: primitive,
             linear_velocity: velocity,
             force: Vec2::new(0.,0.),
             angular_velocity: 0.,
             torque: 0.,
-            restitution: Restitution::new(0.1),
+            restitution: Restitution::new(1.),
             mass: mass,
             moment: I
         }
