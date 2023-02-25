@@ -12,37 +12,28 @@ pub struct Rigidbody {
     pub angular_velocity: f32,
     pub torque: f32,
     pub restitution: Restitution,
-    pub mass: f32,
+    pub mass: Mass,
     pub moment: f32,
 }
 
+pub enum Mass {
+    Static,
+    Some(f32),
+}
+
 impl Rigidbody {
-    pub fn new_shape(mass: f32, radius: f32, primitive: Primitives) -> Self {
-        let I = 0.5 * mass * radius.powf(2.);
+    pub fn new_static_shape(primitive: Primitives) -> Self {
         Self {
             shape: primitive,
-            linear_velocity: Vec2::new(0.,500.),
+            linear_velocity: Vec2::new(0.,0.),
             force: Vec2::new(0.,0.),
             angular_velocity: 0.,
             torque: 0.,
-            restitution: Restitution::new(1.),
-            mass: mass,
-            moment: I
+            restitution: Restitution::new(0.8),
+            mass: Mass::Static,
+            moment: 0.
         }
     }
-
-    // pub fn new(shape: dyn CollisionPrimitive, mass: f32) {
-    //     Self {
-    //         shape,
-    //         linear_velocity: Vec2::new(0.,500.),
-    //         force: Vec2::new(0.,0.),
-    //         angular_velocity: 0.,
-    //         torque: 0.,
-    //         restitution: Restitution::new(0.1),
-    //         mass,
-    //         moment: 0.
-    //     }
-    // }
 
     pub fn new_shape_with_velocity(mass: f32, radius: f32, primitive: Primitives, velocity: Vec2) -> Self {
         let I = 0.5 * mass * radius.powf(2.);
@@ -52,8 +43,8 @@ impl Rigidbody {
             force: Vec2::new(0.,0.),
             angular_velocity: 0.,
             torque: 0.,
-            restitution: Restitution::new(1.),
-            mass: mass,
+            restitution: Restitution::new(0.8),
+            mass: Mass::Some(mass),
             moment: I
         }
     }
