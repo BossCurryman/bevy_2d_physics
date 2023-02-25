@@ -1,8 +1,6 @@
-use std::primitive;
-
 use bevy::prelude::{Vec2, *};
 
-use crate::collision_primitives::{CircleCollider, CollisionPrimitive, Primitives};
+use crate::collision_primitives::{Primitives};
 
 #[derive(Component)]
 pub struct Rigidbody {

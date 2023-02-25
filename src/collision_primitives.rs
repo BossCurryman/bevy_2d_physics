@@ -1,6 +1,4 @@
-use std::ops::{Rem, Neg};
-
-use bevy::prelude::{shape::Circle, *};
+use bevy::prelude::{*};
 
 pub struct CollisionData {
     pub unit_normal: Vec2,
@@ -51,7 +49,7 @@ impl AABB {
         )
     }
 
-    pub fn is_colliding_with_AABB(
+    pub fn is_colliding_with_aabb(
         &self,
         self_transform: &Transform,
         other: &AABB,
@@ -263,7 +261,7 @@ impl CircleCollider {
         }
     }
 
-    pub fn is_colliding_with_AABB(
+    pub fn is_colliding_with_aabb(
         &self,
         self_transform: &Transform,
         other: &AABB,

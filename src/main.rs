@@ -1,9 +1,8 @@
 mod collision_primitives;
 mod rigidbody;
-mod particle_system_2d;
 
-use bevy::{prelude::*, sprite::{Mesh2dHandle, Material2d}, ecs::query::WorldQuery};
-use collision_primitives::{CircleCollider, CollisionPrimitive, Primitives, CollisionData, AABB};
+use bevy::{prelude::*, sprite::{Mesh2dHandle, Material2d}};
+use collision_primitives::{CircleCollider, Primitives, CollisionData, AABB};
 use rand::prelude::*;
 use rigidbody::{Rigidbody, Mass};
 
@@ -57,7 +56,7 @@ fn setup(
     // });
 
     let mut rng = thread_rng();
-    for i in 0..20 {
+    for _ in 0..20 {
         let mag: f32 = rng.gen_range(100.0..1000.0);
         let dir = Vec2::new(rng.gen_range(-1.0..1.0), rng.gen_range(-1.0..1.0));
         let pos = Vec3::new(rng.gen_range(-100.0..100.0), rng.gen_range(-300.0..300.0), 0.);
@@ -176,7 +175,7 @@ fn step_physics(
                     }
                 }
                 Primitives::AABB(c1) => {
-                    if let Some(collision_data) = check_AABB_collision(c1, &transform_1, &rigidbody_2, &transform_2) {
+                    if let Some(collision_data) = check_aabb_collision(c1, &transform_1, &rigidbody_2, &transform_2) {
                         // println!("AABB Collision! normal: {}, depth: {}", collision_data.unit_normal, collision_data.penetration_depth);
                         resolve_collision(collision_data, &mut rigidbody_1, &mut rigidbody_2)
                     }
@@ -227,18 +226,18 @@ fn check_circle_collision(circle: &CircleCollider, circle_trans: &Transform, oth
             circle.is_colliding_with_circle(circle_trans, c2, other_trans)
         }
         Primitives::AABB(c2) => {
-            circle.is_colliding_with_AABB(circle_trans, c2, other_trans)
+            circle.is_colliding_with_aabb(circle_trans, c2, other_trans)
         }
     }
 }
 
-fn check_AABB_collision(AABB: &AABB, AABB_trans: &Transform, other: &Rigidbody, other_trans: &Transform ) -> Option<CollisionData> {
+fn check_aabb_collision(aabb: &AABB, aabb_trans: &Transform, other: &Rigidbody, other_trans: &Transform ) -> Option<CollisionData> {
     match &other.shape {
         Primitives::AABB(c2) => {
-            AABB.is_colliding_with_AABB(AABB_trans, c2, other_trans)
+            aabb.is_colliding_with_aabb(aabb_trans, c2, other_trans)
         }
         Primitives::Circle(c2) => {
-            AABB.is_colliding_with_circle(AABB_trans, c2, other_trans)
+            aabb.is_colliding_with_circle(aabb_trans, c2, other_trans)
         }
     }
 }
